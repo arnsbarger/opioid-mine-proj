@@ -36,20 +36,10 @@ mines <- separate(mines, X, into = c("X1","COAL_METAL_IND","CURRENT_MINE_TYPE","
 state_matches <- paste0("(?=",",",str_c(unique(fips$state), collapse = ",|,"),",",")")
 mines <- separate(mines, X, into = c("MINE_CONTROLLER_OPERATOR_INFO","X"), sep = state_matches, extra = "merge", fill = "right")
 
-# 
+# split next 10 clean variables on ","
 mines <- separate(mines, X, into = c("X2","STATE","BOM_STATE_CD","FIPS_CNTY_CD","FIPS_CNTY_NM","CONG_DIST_CD","COMPANY_TYPE","CURRENT_CONTROLLER_BEGIN_DT","DISTRICT","OFFICE_CD","X"), sep = ",", extra = "merge", fill = "right")
 
-################# PRACTICE ################
-current_control_nm_commas <- test %>% filter(str_detect(CURRENT_CONTROLLER_NAME, ","))
-data <- mines
-data2 <- mines[60:100,]
+# get lat/longs
+mines <- separate(mines, X, into = c("MORE_MINE_INFO","X"), sep = "(?=[0-9]{2}[.][0-9]*)", extra = "merge", fill = "right")
+mines <- separate(mines, X, into = c("LONGITUDE","LATITUDE","X"), sep = ",", extra = "merge", fill = "right")
 
-CURRENT_OPERATOR_ID <- gsub(str_extract(data2$X7, pattern = ",[A-Z]*[0-9]{5},|,[A-Z]*[0-9]{6},|,[0-9]{7},"), pattern = ",", replacement = "")
-data2 <- separate(data2, X7, into = paste0("X",7:8), sep = "(?<=,[A-Z]*[0-9]{5},|,[A-Z]*[0-9]{6},|,[0-9]{7},", extra = "merge", fill = "right")
-
-table(test$X11)
-
-
-mines <- separate(mines, X9, into = c("X9","X10"), sep = state_matches, extra = "merge", fill = "right")
-
-mines <- separate(mines, X10, into = paste0("X",10:30), sep = ",", extra = "merge", fill = "right")
