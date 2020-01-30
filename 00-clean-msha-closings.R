@@ -5,7 +5,7 @@ library(openxlsx)
 library(dplyr)
 
 # import data 
-mine_qtrly <- openxlsx::read.xlsx(xlsxFile = "~/Documents/Pitt/Data/msha_mine_quarterly_employment_production/MineQuartelyDB_EmploymentProduction.xlsx", 
+mine_qtrly <- openxlsx::read.xlsx(xlsxFile = "~/Documents/Pitt/Data/msha_mine_quarterly_employment_production/MineQuartelyDB.xlsx", 
                                   sheet = 1, 
                                   startRow = 3, 
                                   colNames = TRUE,
