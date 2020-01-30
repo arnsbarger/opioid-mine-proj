@@ -29,9 +29,6 @@ mines <- separate(mines, X, into = c("CURRENT_MINE_NAME","X"), sep = "(?=,C,|,M,
 # split by "," up to CURRENT_STATUS_DT
 mines <- separate(mines, X, into = c("X1","COAL_METAL_IND","CURRENT_MINE_TYPE","CURRENT_MINE_STATUS","CURRENT_STATUS_DT","X"), sep = ",", extra = "merge", fill = "right")
 
-# split by CURRENT_OPERATOR_ID
-#mines <- separate(mines, X, into = c("CURRENT_CONTROLLER_NAME","X"), sep = "(?=,[A-Z]*[0-9]{5},|,[A-Z]*[0-9]{6},|,[0-9]{7},)", extra = "merge", fill = "right")
-
 # split on state (CURRENT_OPERATOR_ID and CURRENT_OPERATOR_NAME are too messy to deal with; priority is retaining FIPS info)
 state_matches <- paste0("(?=",",",str_c(unique(fips$state), collapse = ",|,"),",",")")
 mines <- separate(mines, X, into = c("MINE_CONTROLLER_OPERATOR_INFO","X"), sep = state_matches, extra = "merge", fill = "right")
@@ -42,4 +39,9 @@ mines <- separate(mines, X, into = c("X2","STATE","BOM_STATE_CD","FIPS_CNTY_CD",
 # get lat/longs
 mines <- separate(mines, X, into = c("MORE_MINE_INFO","X"), sep = "(?=[0-9]{2}[.][0-9]*)", extra = "merge", fill = "right")
 mines <- separate(mines, X, into = c("LONGITUDE","LATITUDE","X"), sep = ",", extra = "merge", fill = "right")
+
+rm(list=c("fips","state_matches"))
+mines <- mines[ , !names(mines) %in% c("X1","X2")]
+
+
 
