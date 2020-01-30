@@ -43,5 +43,5 @@ mines <- separate(mines, X, into = c("LONGITUDE","LATITUDE","X"), sep = ",", ext
 rm(list=c("fips","state_matches"))
 mines <- mines[ , !names(mines) %in% c("X1","X2")]
 
-
-
+mines$CURRENT_STATUS_DT <- as.Date(mines$CURRENT_STATUS_DT, "%m/%d/%y")
+mines$CURRENT_CONTROLLER_BEGIN_DT <- as.Date(mines$CURRENT_CONTROLLER_BEGIN_DT, "%m/%d/%y")
