@@ -22,9 +22,11 @@ cdc$Year <- as.numeric(as.character(cdc$Year))
 cdc$Crude.Rate.Standard.Error <- as.numeric(as.character(cdc$Crude.Rate.Standard.Error))
 cdc$Crude.Rate.Lower.95..Confidence.Interval <- as.numeric(as.character(cdc$Crude.Rate.Lower.95..Confidence.Interval))
 
+cdc$County.Code <- str_pad(cdc$County.Code, width = 5, side = "left", pad = "0")
+cdc <- cdc %>% separate(County.Code, into = c("fips.state","fips.county"), sep = 2)
+
 cdc_na <- cdc
 cdc_na[cdc_na == "Suppressed" | cdc_na == "Missing" | cdc_na == "Unreliable"] <- NA
-
 
 
 # next steps:
