@@ -95,7 +95,8 @@ data2 <- merge(data1, B03002, by = "fips")
 data3 <- merge(data2, B17001, by = "fips")
 data4 <- merge(data3, B19013, by = "fips")
 
-write.csv(data4, "~/Documents/Pitt/Data/acs_output/acs_mine_sample.csv")
+data4$fips <- str_pad(data4$fips, 5, pad = "0")
+write.csv(data4, "~/Documents/Pitt/Data/acs_output/acs_mine_sample.csv", row.names = FALSE)
 
 
 
