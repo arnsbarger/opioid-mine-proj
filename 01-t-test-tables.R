@@ -13,19 +13,6 @@ options(scipen=999)
 setwd("~/git/opioid-mine-proj/")
 source("00-clean-msha.R") # mines
 
-# #mines <- mines %>% filter(CURRENT_MINE_STATUS %in% c("Abandoned","Abandoned and Sealed") & CURRENT_STATUS_DT >= as.Date("2010/01/01"))
-# # mine data
-# mines_tables <- mines %>% filter(CURRENT_MINE_STATUS %in% c("Active","Abandoned","Abandoned and Sealed"))
-# mines_tables$EverAbandoned <- ifelse(test = mines_tables$CURRENT_MINE_STATUS %in% c("Abandoned","Abandoned and Sealed"), yes = 1, no = 0)
-# mines_tables$County.Code <- paste0(mines_tables$BOM_STATE_CD, mines_tables$FIPS_CNTY_CD)
-# 
-# mines_tables_abandoned <- mines_tables %>% filter(CURRENT_MINE_STATUS %in% c("Abandoned","Abandoned and Sealed") & CURRENT_STATUS_DT >= as.Date("2010/01/01"))
-# mines_tables_active <- mines_tables %>% filter(CURRENT_MINE_STATUS == "Active")
-# mines_tables <- rbind(mines_tables_abandoned, mines_tables_active)
-# 
-# test <- mines_tables %>% group_by(County.Code) %>% summarise(sum_mines_abandoned = sum(EverAbandoned))
-# test$County.Type <- ifelse(test = test$sum_mines_abandoned > 0, yes = "SomeMinesAbandoned", no = "NoMinesAbandoned")
-
 mines$County.Code <- paste0(mines$BOM_STATE_CD, mines$FIPS_CNTY_CD)
 mines <- mines %>% select(MINE_ID, CURRENT_MINE_NAME, County.Code)
 
