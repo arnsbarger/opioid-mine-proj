@@ -5,7 +5,7 @@ library(dplyr)
 library(stringr)
 library(openxlsx)
 library(tidyr)
-
+options(scipen=999)
 # set working directory
 setwd("~/Documents/Pitt/Data/msha_mine_quarterly_employment_production/")
 
