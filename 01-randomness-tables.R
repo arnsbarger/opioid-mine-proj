@@ -74,12 +74,24 @@ acs$fips <- str_pad(acs$fips, 5, pad = "0")
 cdc_acs <- merge(x = cdc_table_data, y = acs, by.x = "County.Code", by.y = "fips", all = TRUE) # merge cdc and acs
 data <- merge(x = mine_data, y = cdc_acs, by = "County.Code", all.x = TRUE) # merge county mine stats with county characteristics
 
+data$distance_from_2010 <- data$date_closed - as.Date("2010-01-01")
+
+### RANDOMNESS REGRESSIONS
+variables <- c(2:5,7:10,65)
 
 # TIMING OF CLOSING
-data$distance_from_2010 <- data$date_closed - as.Date("2010-01-01")
-data <- data[,c(2:5,7:10,24,28:69)]
 
-fit <- lm(as.numeric(distance_from_2010) ~ ., data[,-1])
-summary(fit)
+data_timing <- data[,c(variables, 69)]
+
+fit_timing <- lm(as.numeric(distance_from_2010) ~ ., data_timing[,-1])
+summary(fit_timing)
 
 # EVER CLOSED
+data_ever <- data[,c(variables, 24)]
+
+
+fit_ever <- lm(ever_closed ~ ., data_ever[,-1])
+summary(fit_ever)
+
+
+
