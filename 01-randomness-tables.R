@@ -17,7 +17,7 @@ setwd("~/git/opioid-mine-proj/")
 source("00-clean-msha-closings.R") # mine_qtrly , mine_closings
 setwd("~/git/opioid-mine-proj/")
 source("00-clean-cdc.R") # cdc deaths data
-acs <- read.csv("~/Documents/Pitt/Data/acs_output/acs_mine_sample.csv")[,-1] # acs data
+acs <- read.csv("~/Documents/Pitt/Data/acs_output/acs_mine_sample.csv") # acs data
 acs$fips <- str_pad(acs$fips, 5, pad = "0")
 accidents <- read.delim("~/Documents/Pitt/Data/msha_mine_quarterly_employment_production/Accidents.txt", header = TRUE, sep = "|") # load mine accidents info (since 2000)
 violations <- read.delim("~/Documents/Pitt/Data/msha_mine_quarterly_employment_production/Violations.txt", header = TRUE, sep = "|")# load mine violations info (since 2000)
