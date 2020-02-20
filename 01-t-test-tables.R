@@ -116,7 +116,11 @@ for (i in 2:(ncol(data)-1)) {
     
 }
 
-stargazer(results %>% filter(p_value <= .1) %>% arrange(p_value), summary = FALSE)
+
+presentation <- results %>% filter(p_value <= .15) %>% arrange(p_value)
+stargazer(presentation, summary = FALSE, rownames = FALSE)
 # 250 counties with mines...
 sum(!is.na(data$num_mines)) 
 length(unique(mine_data$County.Code))
+
+
