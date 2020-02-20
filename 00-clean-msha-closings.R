@@ -3,6 +3,7 @@
 # packages
 library(openxlsx)
 library(dplyr)
+library(stringr)
 library(data.table)
 options(scipen=999)
 # import data 
