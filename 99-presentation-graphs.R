@@ -27,23 +27,25 @@ data$group = paste0(data$mine, data$which)
 # base
 base = ggplot(data = data %>% filter(mine == "A"), aes(x = x, y = y, linetype = which, color = mine)) + 
     geom_vline(xintercept = 2011, linetype = 1, color = "gray") + 
-    geom_text(aes(x = 2010.75, y = 120, label = "Mine A Closes"), color = "gray", angle = 90, size = 3) +
+    geom_text(aes(x = 2010.75, y = 140, label = "Mine A Closes"), color = "gray", angle = 90, size = 3) +
     geom_line() + 
     theme_few() +
-    labs(x = "Year", y = "Overdoses", linetype = "", color = "")
-
-never_close = ggplot(data = data %>% filter(mine != "B"), aes(x = x, y = y, linetype = which, group = group, color = mine)) + geom_line() + theme_few()
+    labs(x = "Year", y = "Overdoses", linetype = "", color = "") + 
+    ylim(75,500)
 
 final = ggplot(data = data %>% filter(mine %in% c("A", "B")), aes(x = x, y = y, linetype = which, group = group, color = mine)) + 
     geom_vline(xintercept = 2011, linetype = 1, color = "gray") + 
-    geom_text(aes(x = 2010.75, y = 120, label = "Mine A Closes"), color = "gray", angle = 90, size = 3) +
+    geom_text(aes(x = 2010.75, y = 140, label = "Mine A Closes"), color = "gray", angle = 90, size = 3) +
     geom_vline(xintercept = 2015, linetype = 1, color = "gray") + 
-    geom_text(aes(x = 2014.75, y = 120, label = "Mine B Closes"), color = "gray", angle = 90, size = 3) +
+    geom_text(aes(x = 2014.75, y = 140, label = "Mine B Closes"), color = "gray", angle = 90, size = 3) +
     geom_line() + 
     theme_few() +
-    labs(x = "Year", y = "Overdoses", linetype = "", color = "")
+    labs(x = "Year", y = "Overdoses", linetype = "", color = "") + 
+    ylim(75,500)
     
 
+ggsave("~/Documents/Pitt/Projects/opioid_mine_closings/plots/base.png", plot = base, device = "png", width = 6, height = 4)
+ggsave("~/Documents/Pitt/Projects/opioid_mine_closings/plots/final.png", plot = final, device = "png", width = 6, height = 4)
 
 # load mine_data from somewhere
 map_data <- data.frame(table(mine_data$County.Code))
