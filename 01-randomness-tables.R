@@ -7,6 +7,7 @@ library(rgdal)
 library(reshape2)
 library(acs)
 library(dplyr)
+library(stargazer)
 options(scipen=999)
 
 # load data
@@ -79,19 +80,31 @@ data$distance_from_2010 <- data$date_closed - as.Date("2010-01-01")
 ### RANDOMNESS REGRESSIONS
 variables <- c(2:5,7:10,65)
 
-# TIMING OF CLOSING
+# TIMING OF CLOSING - ALL DATA (SINCE 2000)
 
-data_timing <- data[,c(variables, 69)]
+data_timing_all <- data[,c(variables, 69)]
+fit_timing_all <- lm(as.numeric(distance_from_2010) ~ ., data_timing[,-1])
+summary(fit_timing_all)
 
-fit_timing <- lm(as.numeric(distance_from_2010) ~ ., data_timing[,-1])
-summary(fit_timing)
+# EVER CLOSED - ALL DATA (SINCE 2000)
+data_ever_all <- data[,c(variables, 24)]
+fit_ever_all <- lm(ever_closed ~ ., data_ever[,-1])
+summary(fit_ever_all)
 
-# EVER CLOSED
-data_ever <- data[,c(variables, 24)]
+stargazer(fit_timing_all, fit_ever_all)
 
+# TIMING OF CLOSING - SINCE 2010
+data2010 <- data %>% filter(date_closed >= as.Date("2010-01-01"))
 
-fit_ever <- lm(ever_closed ~ ., data_ever[,-1])
-summary(fit_ever)
+data_timing2010 <- data2010[,c(variables, 69)] 
+fit_timing2010 <- lm(as.numeric(distance_from_2010) ~ ., data_timing2010[,-1])
+summary(fit_timing2010)
 
+# EVER CLOSED - SINCE 2010
+data_ever2010 <- data2010[,c(variables, 24)]
+fit_ever2010 <- lm(ever_closed ~ ., data_ever2010[,-1])
+summary(fit_ever2010)
+
+stargazer(fit_timing_all, fit_timing2010, fit_ever_all, fit_ever2010)
 
 
