@@ -56,6 +56,7 @@ mine_data <- merge(x = mine_data, y = acc_info, by = "MINE_ID", all.x = TRUE)
 mine_data <- merge(x = mine_data, y = vio_info, by = "MINE_ID", all.x = TRUE)
 mine_data <- merge(x = mine_data, y = mine_closings, by = "MINE_ID", all.x = TRUE)
 
+write.csv(mine_data, "~/Documents/Pitt/Data/msha_output/mine_data.csv", row.names = FALSE)
 #mine_data$avg_coal_prod[is.nan(mine_data$avg_coal_prod)] <- NA
 
 
