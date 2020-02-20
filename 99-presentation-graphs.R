@@ -2,6 +2,7 @@ library(ggplot2)
 library(ggthemes)
 library(tigris)
 library(dplyr)
+library(maps)
 
 x = seq(2000,2020,1)
 
@@ -48,15 +49,13 @@ ggsave("~/Documents/Pitt/Projects/opioid_mine_closings/plots/base.png", plot = b
 ggsave("~/Documents/Pitt/Projects/opioid_mine_closings/plots/final.png", plot = final, device = "png", width = 6, height = 4)
 
 # load mine_data from somewhere
-map_data <- data.frame(table(mine_data$County.Code))
-shp <- counties(state = NULL, cb = FALSE, resolution = "500k", year = 2017)
-plot(shp)
+#source("~/git/opioid-mine-proj/00-clean-msha-closings.R")
+mine_data <- read.csv("~/Documents/Pitt/Data/msha_output/mine_data.csv")
+map_data <- mine_data %>% group_by(County.Code) %>% summarise(cnt_mines = length(unique(MINE_ID)), closed_mines = sum(ever_closed))
 
-library("maps")
-us <- fortify(map_data("state"), region = "region")
-ggplot() +
-    geom_map(data  =  us, map = us,
-             aes(x = long, y = lat, map_id = region, group = group),
-             fill = "white", color = "black", size = 0.25) +
-    coord_map("albers", lat0 = 39, lat1 = 45) +
-    theme_map()
+us <- fortify(map_data("county"), region = "region")
+
+merge(us, map_data, by.x = )
+
+
+ggplot() + geom_map(data  =  us, map = us, aes(x = long, y = lat, map_id = region, group = group, order = order), fill = NA, color = "black") + theme_map()
