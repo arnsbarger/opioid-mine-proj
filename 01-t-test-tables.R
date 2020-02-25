@@ -14,7 +14,6 @@ options(scipen=999)
 setwd("~/git/opioid-mine-proj/")
 source("00-clean-msha.R") # mines
 
-mines$County.Code <- paste0(mines$BOM_STATE_CD, mines$FIPS_CNTY_CD)
 mines <- mines %>% select(MINE_ID, CURRENT_MINE_NAME, County.Code)
 
 # load mine data
@@ -31,13 +30,23 @@ acc_info <- data.frame(accidents %>% group_by(MINE_ID) %>% summarise(injuries_si
 
 vio_info <- data.frame(violations %>% group_by(MINE_ID) %>% summarise(violations_since_2000_cnt = n(),
                                                                       total_cnt_affected_empl = sum(NO_AFFECTED, na.rm = TRUE)))
-prod_info <- data.frame(mine_qtrly %>% group_by(MINE_ID) %>% 
-                            filter(COAL_PRODUCTION > 0) %>% 
-                            summarise(avg_coal_prod = mean(COAL_PRODUCTION, na.rm = TRUE),
-                                      avg_employees = mean(AVG_EMPLOYEE_CNT, na.rm = TRUE),
-                                      earliest_yr = min(CAL_YR)))
 
-mine_closings <- mine_qtrly %>% group_by(MINE_ID) %>% arrange(CAL_PROD_QTR) %>% slice(which.max(rleid(AVG_EMPLOYEE_CNT)))  
+prod_info <- mine_qtrly %>% filter(COAL_METAL_IND == "C") %>% group_by(MINE_ID, CAL_PROD_QTR) %>% summarise(total_coal_production = sum(COAL_PRODUCTION, na.rm = TRUE), # total coal production over all subunits
+                                                                                                            total_hours_worked = sum(HOURS_WORKED, na.rm = TRUE),
+                                                                                                            total_employees = sum(AVG_EMPLOYEE_CNT, na.rm = TRUE))
+
+avg_prod_info <- prod_info %>% group_by(MINE_ID) %>% summarise(avg_total_coal_production = mean(total_coal_production, na.rm = TRUE),
+                                                               avg_total_hours_worked = mean(total_hours_worked, na.rm = TRUE),
+                                                               avg_total_employees = mean(total_employees, na.rm = TRUE),
+                                                               earliest_yr_qtr = min(CAL_PROD_QTR))
+    
+mine_closings <- mine_qtrly %>%  
+    filter(COAL_METAL_IND == "C") %>% # same reason as above
+    group_by(MINE_ID, SUBUNIT) %>% 
+    arrange(CAL_PROD_QTR) %>% 
+    slice(which.max(rleid(AVG_EMPLOYEE_CNT)))  
+
+
 mine_closings$ever_closed <- ifelse(mine_closings$AVG_EMPLOYEE_CNT > 0, 0, 1)
 mine_closings$ever_closed_name <- ifelse(mine_closings$AVG_EMPLOYEE_CNT > 0, "Open", "Closed")
 mine_closings <- mine_closings %>% select(MINE_ID, CAL_PROD_QTR, COAL_METAL_IND, ever_closed, ever_closed_name)
