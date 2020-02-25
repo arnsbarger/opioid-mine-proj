@@ -68,7 +68,7 @@ cdc_table_data <- reshape2::dcast(data = test2, formula = County.Code ~ Year, va
 names(cdc_table_data) <- c("County.Code",paste0("Crude.Rate.",names(cdc_table_data)[-1]))
 
 # acs county characteristics data
-acs <- read.csv("~/Documents/Pitt/Data/acs_output/acs_mine_sample.csv")[,-1]
+acs <- read.csv("~/Documents/Pitt/Data/acs_output/acs_mine_sample.csv")
 acs$fips <- str_pad(acs$fips, 5, pad = "0")
 
 ### MERGE
@@ -76,20 +76,22 @@ acs$fips <- str_pad(acs$fips, 5, pad = "0")
 cdc_acs <- merge(x = cdc_table_data, y = acs, by.x = "County.Code", by.y = "fips", all = TRUE) # merge cdc and acs
 data <- merge(x = mine_data, y = cdc_acs, by = "County.Code", all.x = TRUE) # merge county mine stats with county characteristics
 
-data$distance_from_2010 <- data$date_closed - as.Date("2010-01-01")
+#data$distance_from_2010 <- data$date_closed - as.Date("2010-01-01")
+
+data$distance_from_2000 <- as.numeric(data$date_closed - as.Date("2000-01-01")) / 365 # distance in days, convert to years
 
 ### RANDOMNESS REGRESSIONS
-variables <- c(2:5,7:10,65)
+variables <- c(2:5,7:10)
 
 # TIMING OF CLOSING - ALL DATA (SINCE 2000)
 
-data_timing_all <- data[,c(variables, 69)]
-fit_timing_all <- lm(as.numeric(distance_from_2010) ~ ., data_timing[,-1])
+data_timing_all <- data[,c(variables, ncol(data))]
+fit_timing_all <- lm(formula = distance_from_2000 ~ ., data = data_timing_all[,-1])
 summary(fit_timing_all)
 
 # EVER CLOSED - ALL DATA (SINCE 2000)
 data_ever_all <- data[,c(variables, 24)]
-fit_ever_all <- lm(ever_closed ~ ., data_ever[,-1])
+fit_ever_all <- lm(ever_closed ~ ., data_ever_all[,-1])
 summary(fit_ever_all)
 
 stargazer(fit_timing_all, fit_ever_all)
@@ -97,8 +99,8 @@ stargazer(fit_timing_all, fit_ever_all)
 # TIMING OF CLOSING - SINCE 2010
 data2010 <- data %>% filter(date_closed >= as.Date("2010-01-01"))
 
-data_timing2010 <- data2010[,c(variables, 69)] 
-fit_timing2010 <- lm(as.numeric(distance_from_2010) ~ ., data_timing2010[,-1])
+data_timing2010 <- data2010[,c(variables, ncol(data))] 
+fit_timing2010 <- lm(distance_from_2000 ~ ., data_timing2010[,-1])
 summary(fit_timing2010)
 
 # EVER CLOSED - SINCE 2010
@@ -106,6 +108,6 @@ data_ever2010 <- data2010[,c(variables, 24)]
 fit_ever2010 <- lm(ever_closed ~ ., data_ever2010[,-1])
 summary(fit_ever2010)
 
-stargazer(fit_timing_all, fit_timing2010, fit_ever_all, fit_ever2010)
+stargazer(fit_ever_all, fit_ever2010, fit_timing_all, fit_timing2010)
 
 
