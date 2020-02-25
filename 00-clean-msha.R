@@ -46,6 +46,8 @@ mines <- mines[ , !names(mines) %in% c("X1","X2")]
 mines$CURRENT_STATUS_DT <- as.Date(mines$CURRENT_STATUS_DT, "%m/%d/%Y")
 mines$CURRENT_CONTROLLER_BEGIN_DT <- as.Date(mines$CURRENT_CONTROLLER_BEGIN_DT, "%m/%d/%Y")
 
+mines$County.Code <- paste0(mines$BOM_STATE_CD, mines$FIPS_CNTY_CD)
+
 # NEED TO FIX COORDINATE SYSTEM EVENTUALLY
 # should remove "Facility" CURRENT_MINE_TYPE (5510 obs, 6% of data)
 # coordinates(mines) <- ~ LONGITUDE + LATITUDE
