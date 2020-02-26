@@ -40,37 +40,52 @@ avg_prod_info <- prod_info %>% group_by(MINE_ID) %>% summarise(avg_total_coal_pr
                                                                avg_total_employees = mean(total_employees, na.rm = TRUE),
                                                                earliest_yr_qtr = min(CAL_PROD_QTR))
     
-mine_closings <- mine_qtrly %>%  
+# ATTEMPT 1
+# mine_closings$ever_closed <- ifelse(mine_closings$AVG_EMPLOYEE_CNT > 0, 0, 1)
+# mine_closings$ever_closed_name <- ifelse(mine_closings$AVG_EMPLOYEE_CNT > 0, "Open", "Closed")
+# mine_closings <- mine_closings %>% select(MINE_ID, CAL_PROD_QTR, COAL_METAL_IND, ever_closed, ever_closed_name)
+
+# ATTEMPT 2
+# mine_closings <- mine_qtrly %>%  
+#     filter(COAL_METAL_IND == "C") %>% # same reason as above
+#     group_by(MINE_ID, SUBUNIT) %>% 
+#     arrange(CAL_PROD_QTR) %>% 
+#     slice(which.max(rleid(AVG_EMPLOYEE_CNT)))  
+# mine_closings$ever_closed <- ifelse(test = as.numeric(mine_closings$CAL_PROD_QTR) < 20194, yes = 1, no = 0)
+# temp = mine_closings %>% group_by(MINE_ID) %>% summarise(length(unique(ever_closed)))
+# table(temp$`length(unique(ever_closed))`) # 478 mines had one portion close and another still open
+
+# ATTEMPT 3
+mine_closings <- mine_qtrly %>%
     filter(COAL_METAL_IND == "C") %>% # same reason as above
-    group_by(MINE_ID, SUBUNIT) %>% 
-    arrange(CAL_PROD_QTR) %>% 
-    slice(which.max(rleid(AVG_EMPLOYEE_CNT)))  
+    group_by(MINE_ID) %>%
+    arrange(CAL_PROD_QTR) %>%
+    slice(which.max(rleid(AVG_EMPLOYEE_CNT)))
+mine_closings$ever_closed <- ifelse(test = as.numeric(mine_closings$CAL_PROD_QTR) < 20194, yes = 1, no = 0)
 
+mine_closings <- mine_closings %>% select(MINE_ID, CAL_PROD_QTR, ever_closed)
 
-mine_closings$ever_closed <- ifelse(mine_closings$AVG_EMPLOYEE_CNT > 0, 0, 1)
-mine_closings$ever_closed_name <- ifelse(mine_closings$AVG_EMPLOYEE_CNT > 0, "Open", "Closed")
-mine_closings <- mine_closings %>% select(MINE_ID, CAL_PROD_QTR, COAL_METAL_IND, ever_closed, ever_closed_name)
-
-mine_data <- merge(x = prod_info, y = mines, by = "MINE_ID", all.x = TRUE)
+mine_data <- merge(x = avg_prod_info, y = mines, by = "MINE_ID", all.x = TRUE)
 mine_data <- merge(x = mine_data, y = acc_info, by = "MINE_ID", all.x = TRUE)
 mine_data <- merge(x = mine_data, y = vio_info, by = "MINE_ID", all.x = TRUE)
 mine_data <- merge(x = mine_data, y = mine_closings, by = "MINE_ID", all.x = TRUE)
 
-mine_data$avg_coal_prod[is.nan(mine_data$avg_coal_prod)] <- NA
-mine_data[is.na(mine_data)] <- 0
+# mine_data$avg_coal_prod[is.nan(mine_data$avg_coal_prod)] <- NA
+# mine_data[is.na(mine_data)] <- 0
 
 county_data <- mine_data %>% group_by(County.Code) %>% summarise(num_mines = length(unique(MINE_ID)),
-                                                                 avg_coal_prod_cnty = mean(avg_coal_prod, na.rm = TRUE),
-                                                                 avg_emp_cnty = mean(avg_employees, na.rm = TRUE),
-                                                                 earliest_yr_cnty = min(earliest_yr),
-                                                                 avg_earliest_yr = mean(earliest_yr, na.rm = TRUE),
+                                                                 avg_total_coal_prod_cnty = mean(avg_total_coal_production, na.rm = TRUE),
+                                                                 avg_total_emp_cnty = mean(avg_total_employees, na.rm = TRUE),
+                                                                 earliest_yr_qtr_cnty = min(earliest_yr_qtr),
+                                                                 #avg_earliest_yr = mean(earliest_yr, na.rm = TRUE),
                                                                  total_injuries_since2000 = sum(injuries_since_2000_cnt),
                                                                  total_accidents_since2000 = sum(accidents_since_2000_cnt),
                                                                  total_violations_since2000 = sum(violations_since_2000_cnt),
                                                                  total_empl_affected_viol2000 = sum(total_cnt_affected_empl),
                                                                  total_ever_closed = sum(ever_closed),
-                                                                 cnt_metal_mines = sum(COAL_METAL_IND == "M"),
-                                                                 cnt_coal_mines = sum(COAL_METAL_IND == "C")
+                                                                 percent_ever_closed = total_ever_closed / num_mines
+                                                                 #cnt_metal_mines = sum(COAL_METAL_IND == "M"),
+                                                                 #cnt_coal_mines = sum(COAL_METAL_IND == "C")
                                                                  )
 
 # cdc data
@@ -100,30 +115,44 @@ acs$fips <- str_pad(acs$fips, 5, pad = "0")
 ### MERGE
 
 cdc_acs <- merge(x = cdc_table_data, y = acs, by.x = "County.Code", by.y = "fips", all = TRUE) # merge cdc and acs
-data <- merge(x = county_data, y = cdc_acs, by = "County.Code", all = TRUE) # merge county mine stats with county characteristics
+data <- merge(x = county_data, y = cdc_acs, by = "County.Code", all.x = TRUE) # merge county mine stats with county characteristics
 
-data$per_coal_mines <- data$cnt_coal_mines / data$num_mines
-data$per_metal_mines <- data$cnt_metal_mines / data$num_mines
+# data$per_coal_mines <- data$cnt_coal_mines / data$num_mines
+# data$per_metal_mines <- data$cnt_metal_mines / data$num_mines
+
 data$any_mines_closed <- ifelse(test = data$total_ever_closed > 0, yes = 1, no = 0)
+table(data$any_mines_closed)
+data[is.na(data)] <- 0
 
-
+variables <- c(2:4,6,7,8,23:30,42:50,55:58,73:78,81)
 # t-tests: establish differences between counties that 
-results <- data.frame(variable = names(data[,2:(ncol(data)-1)]), t_stat = NA, p_value = NA)
+# results <- data.frame(variable = names(data[,variables]), t_stat = NA, p_value = NA)
 
-for (i in 2:(ncol(data)-1)) {
+# for (i in 2:(ncol(data)-1)) {
+#     result <- t.test(data[,i] ~ any_mines_closed, data, var.equal = FALSE)
+#     
+#     results$t_stat[i-1] <- result$statistic
+#     
+#     results$p_value[i-1] <- result$p.value
+#     
+#     results$mean_0[i-1] <- result$estimate[1]
+#     
+#     results$mean_1[i-1] <- result$estimate[2]
+#     
+#     results$degrees_of_freedom[i-1] <- result$parameter
+#     
+# }
+results <- data.frame(t_stat = NA, p_value = NA, mean_0 = NA, mean_1 = NA, degrees_of_freedom = NA)
+
+for (i in variables) {
     result <- t.test(data[,i] ~ any_mines_closed, data, var.equal = FALSE)
     
-    results$t_stat[i-1] <- result$statistic
+    row <- c(result$statistic, result$p.value, result$estimate[1], result$estimate[2], result$parameter)
     
-    results$p_value[i-1] <- result$p.value
-    
-    results$mean_0[i-1] <- result$estimate[1]
-    
-    results$mean_1[i-1] <- result$estimate[2]
-    
-    results$degrees_of_freedom[i-1] <- result$parameter
-    
+    results <- rbind(row, results)
 }
+results <- results[-nrow(results),]
+results$variable <- names(data[,variables])
 
 
 presentation <- results %>% filter(p_value <= .15) %>% arrange(p_value)
