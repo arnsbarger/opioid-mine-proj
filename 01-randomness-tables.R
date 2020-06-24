@@ -8,6 +8,7 @@ library(reshape2)
 library(acs)
 library(dplyr)
 library(stargazer)
+library(haven) # read_dta()
 options(scipen=999)
 
 # load data
@@ -76,38 +77,50 @@ acs$fips <- str_pad(acs$fips, 5, pad = "0")
 cdc_acs <- merge(x = cdc_table_data, y = acs, by.x = "County.Code", by.y = "fips", all = TRUE) # merge cdc and acs
 data <- merge(x = mine_data, y = cdc_acs, by = "County.Code", all.x = TRUE) # merge county mine stats with county characteristics
 
-#data$distance_from_2010 <- data$date_closed - as.Date("2010-01-01")
+#data <- mine_data
+data$distance_from_2000 <- as.numeric(data$date_closed - as.Date("2000-01-01"))  # distance in days since 2000
+data$years_since_2000 <- data$distance_from_2000 / 365
 
-data$distance_from_2000 <- as.numeric(data$date_closed - as.Date("2000-01-01")) / 365 # distance in days, convert to years
+# add county characteristics
+icpsr <- read_dta("~/Documents/Pitt/Projects/opioid_mine_closings/ICPSR_20660/DS0001/20660-0001-Data.dta")
+icpsr <- icpsr %>% select(ID, State, County, FIPS, StateName, CountyName, Division, Region, SexRatio05, MedianAge05, Fmale_MdAge05, Male_MdAge05, White05, Black05, AIAN05, UnempRate05, HouseStrs04, LowEduc04, PerstPov04, RuralUrban03, IdxCrime04, Robbery04, CrimeRate04, BushVotes04)
+icpsr$FIPS <- str_pad(icpsr$FIPS, 5, pad = "0")
+
+data <- merge(x = data, y = icpsr, by.x = "County.Code", by.y = "FIPS", all.x = TRUE)
+data[,7:10][is.na(data[,7:10])] <- 0 # NA values for injuries, accidents, etc. probably means zero accidents, etc...
 
 ### RANDOMNESS REGRESSIONS
-variables <- c(2:5,7:10)
+#variables <- c(2:5,7:10) # only mining variables
+variables <- c(3:4,7:10,46:47,58,69,77:78,88:103) # mining and social variables
+#variables <- c(39:54)
 
 # TIMING OF CLOSING - ALL DATA (SINCE 2000)
 
-data_timing_all <- data[,c(variables, ncol(data))]
-fit_timing_all <- lm(formula = distance_from_2000 ~ ., data = data_timing_all[,-1])
+data_timing_all <- data %>% filter(ever_closed == 1) %>% select(c(variables, "years_since_2000")) # only keep desired variables and CLOSED mines
+fit_timing_all <- lm(formula = years_since_2000 ~ ., data = data_timing_all)
 summary(fit_timing_all)
 
 # EVER CLOSED - ALL DATA (SINCE 2000)
 data_ever_all <- data[,c(variables, 24)]
-fit_ever_all <- lm(ever_closed ~ ., data_ever_all[,-1])
+fit_ever_all <- lm(ever_closed ~ ., data_ever_all)
 summary(fit_ever_all)
 
-stargazer(fit_timing_all, fit_ever_all)
+stargazer(fit_timing_all, fit_ever_all, df = FALSE)
 
 # TIMING OF CLOSING - SINCE 2010
-data2010 <- data %>% filter(date_closed >= as.Date("2010-01-01"))
+data$distance_from_2010 <- as.numeric(data$date_closed - as.Date("2010-01-01"))
+data$years_since_2010 <- data$distance_from_2010 / 365
+data_timing2010 <- data %>% filter(date_closed >= as.Date("2010-01-01") & ever_closed == 1) %>% select(c(variables, "years_since_2010"))
 
-data_timing2010 <- data2010[,c(variables, ncol(data))] 
-fit_timing2010 <- lm(distance_from_2000 ~ ., data_timing2010[,-1])
+#data_timing2010 <- data2010[,c(variables, ncol(data))] 
+fit_timing2010 <- lm(years_since_2010 ~ ., data_timing2010)
 summary(fit_timing2010)
 
 # EVER CLOSED - SINCE 2010
-data_ever2010 <- data2010[,c(variables, 24)]
+data_ever2010 <- data %>% filter(date_closed >= as.Date("2010-01-01")) %>% select(c(variables, 24))
 fit_ever2010 <- lm(ever_closed ~ ., data_ever2010[,-1])
 summary(fit_ever2010)
 
-stargazer(fit_ever_all, fit_ever2010, fit_timing_all, fit_timing2010)
+stargazer(fit_ever_all, fit_ever2010, fit_timing_all, fit_timing2010, df = FALSE)
 
 
