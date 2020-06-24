@@ -46,11 +46,11 @@ avg_prod_info <- prod_info %>% group_by(MINE_ID) %>% summarise(avg_total_coal_pr
 # mine_closings <- mine_closings %>% select(MINE_ID, CAL_PROD_QTR, COAL_METAL_IND, ever_closed, ever_closed_name)
 
 # ATTEMPT 2
-# mine_closings <- mine_qtrly %>%  
+# mine_closings <- mine_qtrly %>%
 #     filter(COAL_METAL_IND == "C") %>% # same reason as above
-#     group_by(MINE_ID, SUBUNIT) %>% 
-#     arrange(CAL_PROD_QTR) %>% 
-#     slice(which.max(rleid(AVG_EMPLOYEE_CNT)))  
+#     group_by(MINE_ID, SUBUNIT) %>%
+#     arrange(CAL_PROD_QTR) %>%
+#     slice(which.max(rleid(AVG_EMPLOYEE_CNT)))
 # mine_closings$ever_closed <- ifelse(test = as.numeric(mine_closings$CAL_PROD_QTR) < 20194, yes = 1, no = 0)
 # temp = mine_closings %>% group_by(MINE_ID) %>% summarise(length(unique(ever_closed)))
 # table(temp$`length(unique(ever_closed))`) # 478 mines had one portion close and another still open
