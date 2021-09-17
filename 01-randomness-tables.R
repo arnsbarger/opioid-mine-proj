@@ -9,6 +9,9 @@ library(acs)
 library(dplyr)
 library(stargazer)
 library(haven) # read_dta()
+library(corrplot)
+library(Hmisc)
+
 options(scipen=999)
 
 # load data
@@ -76,7 +79,7 @@ acs$fips <- str_pad(acs$fips, 5, pad = "0")
 
 cdc_acs <- merge(x = cdc_table_data, y = acs, by.x = "County.Code", by.y = "fips", all = TRUE) # merge cdc and acs
 data <- merge(x = mine_data, y = cdc_acs, by = "County.Code", all.x = TRUE) # merge county mine stats with county characteristics
-
+table(data$County.Code) # checking how many counties have more than 1 mine
 #data <- mine_data
 data$distance_from_2000 <- as.numeric(data$date_closed - as.Date("2000-01-01"))  # distance in days since 2000
 data$years_since_2000 <- data$distance_from_2000 / 365
@@ -88,6 +91,29 @@ icpsr$FIPS <- str_pad(icpsr$FIPS, 5, pad = "0")
 
 data <- merge(x = data, y = icpsr, by.x = "County.Code", by.y = "FIPS", all.x = TRUE)
 data[,7:10][is.na(data[,7:10])] <- 0 # NA values for injuries, accidents, etc. probably means zero accidents, etc...
+data$injuries_since_2000_per_avg_capita <- data$injuries_since_2000_cnt / data$avg_employees
+data$accidents_since_2000_per_avg_capita <- data$accidents_since_2000_cnt / data$avg_employees
+data$violations_since_2000_per_avg_capita <- data$violations_since_2000_cnt / data$avg_employees
+
+# Determine which of these socioeconomic controls are highly correlated (looking for a set of variables that make for a well-specified regression)
+cor_data <- data[,c(3:4,28,46,52:55,57:61,64,69:75,77:78,95:106,24,80)]
+lapply(cor_data, class)
+res <- cor(cor_data, use = "complete.obs")
+round(res, 2)
+corrplot(res, type = "upper", tl.col = "black", tl.srt = 45, method = "color")
+
+res2 <- rcorr(as.matrix(cor_data))
+flattenCorrMatrix <- function(cormat, pmat) {
+    ut <- upper.tri(cormat)
+    data.frame(
+        row = rownames(cormat)[row(cormat)[ut]],
+        column = rownames(cormat)[col(cormat)[ut]],
+        cor  =(cormat)[ut],
+        p = pmat[ut]
+    )
+}
+flattenCorrMatrix(res2$r, res2$P)
+corrplot(res2$r, type="upper", p.mat = res2$P, sig.level = 0.01, insig = "blank", tl.col = "black", tl.cex = .5)
 
 ### RANDOMNESS REGRESSIONS
 #variables <- c(2:5,7:10) # only mining variables

@@ -3,7 +3,8 @@
 library(gdata)
 library(dplyr)
 library(stringr)
-
+library(USAboundaries)
+library(sf)
 setwd("~/Documents/Pitt/Data/cdc_multiple_cause_of_death/")
 
 # cdc multiple cause data
@@ -27,6 +28,16 @@ cdc$County.Code <- str_pad(cdc$County.Code, width = 5, side = "left", pad = "0")
 cdc_na <- cdc
 cdc_na[cdc_na == "Suppressed" | cdc_na == "Missing" | cdc_na == "Unreliable"] <- NA
 
+appalachia <- c("Ohio","West Virginia", "Alabama", "Georgia", "Kentucky", "Maryland", "Mississippi", "New York", "North Carolina", "Ohio", "Pennsylvania", "South Carolina", "Tennessee", "Virginia")
+
+county_sf <- us_counties(map_date = "2000-01-01", states = appalachia, resolution = 'low')
+county_sf <- merge(x = county_sf, y = cdc_acs, by.x = "fips", by.y = "County.Code", all.x = TRUE)
+state_sf <- us_states(map_date = "2000-01-01", states = appalachia, resolution = 'low')
+ggplot() + 
+    geom_sf(data = county_sf, aes(fill = Crude.Rate.2017), size = .2) + scale_fill_viridis() + 
+    geom_sf(data = state_sf, fill = NA, color = "black", size = .2) +
+    theme_void() 
+ggsave("~/Documents/Pitt/Projects/opioid_mine_closings/crude_rate2017_map.png", width = 10, height = 6)
 
 # next steps:
 #   1) learn when CDC suppresses data (only values < a certain number? by population?)
